@@ -5,4 +5,3 @@ pub enum TCPStreamType {
     Plain(TcpStream),
     SSL(SslStream<TcpStream>),
 }
-
