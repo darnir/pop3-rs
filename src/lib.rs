@@ -17,7 +17,7 @@ extern crate error_chain;
 extern crate openssl;
 
 use std::io::BufReader;
-use openssl::ssl::{SslMethod, SslConnectorBuilder, SslStream};
+use openssl::ssl::{SslMethod, SslConnectorBuilder};
 use std::net::TcpStream;
 use std::path::PathBuf;
 
@@ -32,6 +32,11 @@ pub mod errors {
 }
 use errors::*;
 
+mod tcpstream;
+mod tcpreader;
+use tcpstream::TCPStreamType;
+use tcpreader::TCPReader;
+
 #[derive(PartialEq)]
 #[derive(Debug)]
 enum POP3State {
@@ -39,16 +44,6 @@ enum POP3State {
     AUTHORIZATION,
     TRANSACTION,
     UPDATE,
-}
-
-enum TCPReader {
-    Plain(BufReader<TcpStream>),
-    SSL(BufReader<SslStream<TcpStream>>),
-}
-
-enum TCPStreamType {
-    Plain(TcpStream),
-    SSL(SslStream<TcpStream>),
 }
 
 pub struct POP3Connection {
