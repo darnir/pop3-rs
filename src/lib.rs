@@ -14,6 +14,8 @@ include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 extern crate log;
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate lazy_static;
 extern crate openssl;
 extern crate regex;
 
@@ -39,6 +41,7 @@ use errors::*;
 mod tcpstream;
 mod tcpreader;
 mod pop3result;
+mod utils;
 use tcpstream::TCPStreamType;
 use tcpreader::TCPReader;
 use pop3result::POP3Data;
@@ -97,11 +100,36 @@ impl POP3Connection {
         Ok(ctx)
     }
 
-    pub fn login(&mut self) {
+    pub fn login(&mut self) -> Result<POP3Data> {
         assert!(self.state == POP3State::AUTHORIZATION);
         trace!("Attempting to Login");
         let username = &self.account.username.clone();
-        let auth_user_cmd = self.send_command("USER", Some(username)).unwrap();
+        let auth_user_cmd = self.send_command("USER", Some(username));
+        let auth_response = match auth_user_cmd {
+            Ok(_) => {
+                debug!("Plain USER/PASS authentication");
+                let password = &self.account.password.clone();
+                self.send_command("PASS", Some(password))
+            }
+            Err(_) => {
+                debug!("Authenticating using APOP");
+                let digest = utils::get_apop_digest(&self.timestamp, &self.account.password);
+                let apop_param = &format!("{} {}", self.account.username, digest);
+                self.send_command("APOP", Some(apop_param))
+            }
+        };
+
+        // Switch the current state to TRANSACTION on a successful authentication
+        match auth_response {
+            Ok(_) => {
+                self.state = POP3State::TRANSACTION;
+                debug!("POP3State::{:?}", self.state);
+                Ok(POP3Data::LOGIN)
+            }
+            Err(e) => {
+                Err(e)
+            }
+        }
     }
 
     fn read_greeting(&mut self) -> Result<()> {
@@ -115,8 +143,33 @@ impl POP3Connection {
     }
 
     fn send_command(&mut self, command: &str, param: Option<&str>) -> Result<Vec<String>> {
-        let x = Vec::new();
-        Ok(x)
+        lazy_static!{
+            static ref RESPONSE: Regex = Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
+        }
+
+        // Identify if the command is a multiline command
+        let is_multiline = match command {
+            "LIST" => param.is_none(),
+            _ => false,
+        };
+
+        // Create the actual POP3 Command by appending the parameters
+        let command = match param {
+            Some(x) => format!("{} {}", command, x),
+            None => command.to_string()
+        };
+
+        info!("C: {}", command);
+        self.stream.write_string(&command)?;
+
+        let response = self.read_response(is_multiline)?;
+        let status_line = response[0].clone();
+        let response_groups = RESPONSE.captures(&status_line).unwrap();
+        match response_groups.name("status").ok_or("Regex match failed")?.as_str() {
+            "+OK" => Ok(response),
+            "-ERR" => Err(response_groups["statustext"].to_string().into()),
+            _ => Err("Un-parseable Response".into()),
+        }
     }
 
     fn read_response(&mut self, is_multiline: bool) -> Result<Vec<String>> {
