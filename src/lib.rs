@@ -40,11 +40,12 @@ use errors::*;
 
 mod tcpstream;
 mod tcpreader;
-mod pop3result;
+pub mod pop3result;
+mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
 use tcpreader::TCPReader;
-use pop3result::POP3Data;
+use pop3result::POP3Stat;
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -100,7 +101,7 @@ impl POP3Connection {
         Ok(ctx)
     }
 
-    pub fn login(&mut self) -> Result<POP3Data> {
+    pub fn login(&mut self) -> Result<()> {
         assert!(self.state == POP3State::AUTHORIZATION);
         trace!("Attempting to Login");
         let username = &self.account.username.clone();
@@ -124,12 +125,17 @@ impl POP3Connection {
             Ok(_) => {
                 self.state = POP3State::TRANSACTION;
                 debug!("POP3State::{:?}", self.state);
-                Ok(POP3Data::LOGIN)
+                Ok(())
             }
-            Err(e) => {
-                Err(e)
-            }
+            Err(e) => Err(e),
         }
+    }
+
+    pub fn stat(&mut self) -> Result<POP3Stat> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: STAT");
+        self.send_command("STAT", None)
+            .map(|msg| POP3Stat::parse(&msg[0]))
     }
 
     fn read_greeting(&mut self) -> Result<()> {
@@ -156,7 +162,7 @@ impl POP3Connection {
         // Create the actual POP3 Command by appending the parameters
         let command = match param {
             Some(x) => format!("{} {}", command, x),
-            None => command.to_string()
+            None => command.to_string(),
         };
 
         info!("C: {}", command);
