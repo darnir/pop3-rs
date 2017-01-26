@@ -12,6 +12,10 @@ pub struct POP3Stat {
 
 #[derive(Debug)]
 pub struct POP3List {
-    pub mbox_stat: Option<POP3Stat>,
     pub mailbox: Vec<EmailMetadata>,
+}
+
+#[derive(Debug)]
+pub struct POP3Retr {
+    pub msg_data: String,
 }

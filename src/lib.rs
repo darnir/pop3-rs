@@ -45,7 +45,7 @@ mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
 use tcpreader::TCPReader;
-use pop3result::{POP3Stat, POP3List};
+use pop3result::{POP3Stat, POP3List, POP3Retr};
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -153,6 +153,24 @@ impl POP3Connection {
             .map(|msg| POP3List::parse(&msg))
     }
 
+    pub fn retr(&mut self, msgnum: u32) -> Result<POP3Retr> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: RETR");
+        self.send_command("RETR", Some(&msgnum.to_string()))
+            .map(|msg| POP3Retr::parse(&msg))
+    }
+
+    pub fn dele(&mut self, msgnum: u32) {
+
+    }
+
+    pub fn noop(&mut self) -> Result<()> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: NOOP");
+        let _ = self.send_command("NOOP", None);
+        Ok(())
+    }
+
     fn read_greeting(&mut self) -> Result<()> {
         trace!("Reading Greeting from Server");
         let greeting = &self.read_response(false)?[0];
@@ -164,13 +182,10 @@ impl POP3Connection {
     }
 
     fn send_command(&mut self, command: &str, param: Option<&str>) -> Result<Vec<String>> {
-        lazy_static!{
-            static ref RESPONSE: Regex = Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
-        }
-
         // Identify if the command is a multiline command
         let is_multiline = match command {
             "LIST" => param.is_none(),
+            "RETR" => true,
             _ => false,
         };
 
@@ -183,27 +198,33 @@ impl POP3Connection {
         info!("C: {}", command);
         self.stream.write_string(&command)?;
 
-        let response = self.read_response(is_multiline)?;
-        let status_line = response[0].clone();
-        let response_groups = RESPONSE.captures(&status_line).unwrap();
-        match response_groups.name("status").ok_or("Regex match failed")?.as_str() {
-            "+OK" => Ok(response),
-            "-ERR" => Err(response_groups["statustext"].to_string().into()),
-            _ => Err("Un-parseable Response".into()),
-        }
+        self.read_response(is_multiline)
     }
 
     fn read_response(&mut self, is_multiline: bool) -> Result<Vec<String>> {
+
+        lazy_static!{
+            static ref RESPONSE: Regex = Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
+        }
         const LF: u8 = 0x0a;
         let mut response_data: Vec<String> = Vec::new();
         let mut buff = Vec::new();
+        let mut complete;
 
         //First read the status line
         self.reader.read_until(LF, &mut buff)?;
         response_data.push(String::from_utf8(buff.clone())?);
         info!("S: {}", response_data[0]);
 
-        let mut complete = false;
+        // Test if the response is positive. Else exit early.
+        let status_line = response_data[0].clone();
+        let response_groups = RESPONSE.captures(&status_line).unwrap();
+        match response_groups.name("status").ok_or("Regex match failed")?.as_str() {
+            "+OK" => complete = false,
+            "-ERR" => return Err(response_groups["statustext"].to_string().into()),
+            _ => return Err("Un-parseable Response".into()),
+        };
+
         while !complete && is_multiline {
             buff.clear();
             self.reader.read_until(LF, &mut buff)?;
