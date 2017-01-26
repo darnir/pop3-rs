@@ -45,7 +45,7 @@ mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
 use tcpreader::TCPReader;
-use pop3result::POP3Stat;
+use pop3result::{POP3Stat, POP3List};
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -136,6 +136,21 @@ impl POP3Connection {
         trace!("Cmd: STAT");
         self.send_command("STAT", None)
             .map(|msg| POP3Stat::parse(&msg[0]))
+    }
+
+    pub fn list(&mut self, msgnum: Option<u32>) -> Result<POP3List> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: LIST");
+        let msgnumval;
+        let msgnum = match msgnum {
+            Some(x) => {
+                msgnumval = x.to_string();
+                Some(msgnumval.as_ref())
+            }
+            None => None
+        };
+        self.send_command("LIST", msgnum)
+            .map(|msg| POP3List::parse(&msg))
     }
 
     fn read_greeting(&mut self) -> Result<()> {
