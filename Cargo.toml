@@ -12,6 +12,9 @@ categories = ["network-programming", "web-programming"]
 readme = ""
 license = "MIT"
 
+[badges]
+travis-ci = { repository = "pop3-rs" }
+
 [features]
 default = ["serde_codegen"]
 unstable = ["serde_derive"]
