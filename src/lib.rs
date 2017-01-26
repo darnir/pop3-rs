@@ -1,3 +1,34 @@
+//! # POP3-RS
+//!
+//! A POP3 Client Library written in Rust
+//!
+//! ## Example
+//! ```rust
+//! extern crate pop3_rs;
+//!
+//! use pop3_rs::{AccountConfig, POP3Connection};
+//!
+//! fn main() {
+//!     let config = AccountConfig {
+//!         host: String::from("pop.gmail.com"),
+//!         port: 995,
+//!         username: String::from("username"),
+//!         password: String::from("password"),
+//!         auth: String::from("SSL"),
+//!         maildir: None
+//!     };
+//!
+//!     let mut connection = POP3Connection::new(config).unwrap();
+//!     connection.login().unwrap();
+//!     let stat = connection.stat().unwrap();
+//!     println!("{:?}", stat);
+//!     let list = connection.list(Some(2)).unwrap();
+//!     println!("{:?}", list);
+//!     let msg1 = connection.retr(1).unwrap();
+//!     println!("{:?}", msg1);
+//!     connection.quit().unwrap();
+//! }
+//! ```
 #[cfg(feature = "serde_derive")]
 #[macro_use]
 extern crate serde_derive;
@@ -180,6 +211,7 @@ impl POP3Connection {
         let _ = self.send_command("QUIT", None)?;
         self.state = POP3State::END;
         debug!("POP3State::{:?}", self.state);
+        self.stream.shutdown();
         Ok(())
     }
 

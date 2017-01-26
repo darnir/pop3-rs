@@ -44,4 +44,14 @@ impl TCPStreamType {
     pub fn write_string(&mut self, buf: &str) -> Result<usize, Error> {
         self.write(format!("{}\r\n", buf).as_ref())
     }
+
+    pub fn shutdown(&mut self) {
+        if let TCPStreamType::Plain(ref mut stream) = *self {
+            trace!("Closing TCP Stream");
+            stream.get_mut().shutdown(::std::net::Shutdown::Both).unwrap();
+        } else if let TCPStreamType::SSL(ref mut stream ) = *self {
+            trace!("Closing SSL Stream");
+            stream.get_mut().shutdown().unwrap();
+        }
+    }
 }
