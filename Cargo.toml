@@ -9,7 +9,7 @@ homepage = "https://github.com/darnir/pop3-rs"
 documentation = ""
 keywords = ["pop", "pop3", "mail", "protocol"]
 categories = ["network-programming", "web-programming"]
-readme = ""
+readme = "README.md"
 license = "MIT"
 
 [badges]
