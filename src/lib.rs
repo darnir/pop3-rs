@@ -53,7 +53,8 @@ enum POP3State {
     BEGIN,
     AUTHORIZATION,
     TRANSACTION,
-    UPDATE,
+    // UPDATE, // State unused in a Client
+    END,
 }
 
 pub struct POP3Connection {
@@ -178,6 +179,15 @@ impl POP3Connection {
         assert!(self.state == POP3State::TRANSACTION);
         trace!("Cmd: RSET");
         let _ = self.send_command("RSET", None)?;
+        Ok(())
+    }
+
+    pub fn quit(&mut self) -> Result<()> {
+        assert!(self.state == POP3State::AUTHORIZATION || self.state == POP3State::TRANSACTION);
+        trace!("Cmd: QUIT");
+        let _ = self.send_command("QUIT", None)?;
+        self.state = POP3State::END;
+        debug!("POP3State::{:?}", self.state);
         Ok(())
     }
 
