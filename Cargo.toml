@@ -7,6 +7,7 @@ description = "A rust based library for handling the POP3 Protocol"
 repository = "https://github.com/darnir/pop3-rs"
 homepage = "https://github.com/darnir/pop3-rs"
 keywords = ["pop", "pop3", "mail", "protocol"]
+documentation = "https://docs.rs/pop3-rs"
 categories = ["network-programming", "web-programming"]
 readme = "README.md"
 license = "MIT"
