@@ -39,7 +39,6 @@ pub mod errors {
 use errors::*;
 
 mod tcpstream;
-mod tcpreader;
 pub mod pop3result;
 mod pop3resultimpl;
 mod utils;
@@ -60,7 +59,6 @@ enum POP3State {
 pub struct POP3Connection {
     account: AccountConfig,
     stream: TCPStreamType,
-    reader: TCPReader,
     state: POP3State,
     timestamp: String,
 }
@@ -69,20 +67,17 @@ impl POP3Connection {
     pub fn new(account: AccountConfig) -> Result<POP3Connection> {
         trace!("Initiate POP3 Connection");
         let tcp_stream = TcpStream::connect((&account.host[..], account.port))?;
-        let (stream, reader) = match account.auth.as_ref() {
+        let stream = match account.auth.as_ref() {
             "Plain" => {
                 debug!("Creating a Plain TCP Connection");
-                let stream = TCPStreamType::Plain(tcp_stream.try_clone()?);
-                let reader = TCPReader::Plain(BufReader::new(tcp_stream));
-                (stream, reader)
+                let stream = TCPStreamType::Plain(BufReader::new(tcp_stream.try_clone()?));
+                stream
             }
             "SSL" => {
                 debug!("Creating a SSL Connection");
                 let connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
-                let stream = TCPStreamType::SSL(connector.connect(&account.host[..], tcp_stream.try_clone()?)?);
-                let reader = TCPReader::SSL(BufReader::new(connector.clone()
-                    .connect(&account.host[..], tcp_stream)?));
-                (stream, reader)
+                let stream = TCPStreamType::SSL(BufReader::new(connector.connect(&account.host[..], tcp_stream)?));
+                stream
             }
             _ => return Err("Unknown auth type".into()),
         };
@@ -90,7 +85,6 @@ impl POP3Connection {
         let mut ctx = POP3Connection {
             account: account,
             stream: stream,
-            reader: reader,
             state: POP3State::BEGIN,
             timestamp: String::new(),
         };
@@ -240,7 +234,7 @@ impl POP3Connection {
         let mut complete;
 
         //First read the status line
-        self.reader.read_until(LF, &mut buff)?;
+        self.stream.read_until(LF, &mut buff)?;
         response_data.push(String::from_utf8(buff.clone())?);
         info!("S: {}", response_data[0]);
 
@@ -255,7 +249,7 @@ impl POP3Connection {
 
         while !complete && is_multiline {
             buff.clear();
-            self.reader.read_until(LF, &mut buff)?;
+            self.stream.read_until(LF, &mut buff)?;
             let line = String::from_utf8(buff.clone())?;
             if line == ".\r\n" {
                 complete = true;
