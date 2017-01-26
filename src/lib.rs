@@ -69,14 +69,12 @@ impl POP3Connection {
         let stream = match account.auth.as_ref() {
             "Plain" => {
                 debug!("Creating a Plain TCP Connection");
-                let stream = TCPStreamType::Plain(BufReader::new(tcp_stream.try_clone()?));
-                stream
+                TCPStreamType::Plain(BufReader::new(tcp_stream.try_clone()?))
             }
             "SSL" => {
                 debug!("Creating a SSL Connection");
                 let connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
-                let stream = TCPStreamType::SSL(BufReader::new(connector.connect(&account.host[..], tcp_stream)?));
-                stream
+                TCPStreamType::SSL(BufReader::new(connector.connect(&account.host[..], tcp_stream)?))
             }
             _ => return Err("Unknown auth type".into()),
         };
@@ -220,8 +218,7 @@ impl POP3Connection {
     fn send_command(&mut self, command: &str, param: Option<&str>) -> Result<Vec<String>> {
         // Identify if the command is a multiline command
         let is_multiline = match command {
-            "LIST" => param.is_none(),
-            "UIDL" => param.is_none(),
+            "LIST" | "UIDL" => param.is_none(),
             "RETR" => true,
             _ => false,
         };
