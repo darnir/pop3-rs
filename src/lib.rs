@@ -74,7 +74,8 @@ impl POP3Connection {
             "SSL" => {
                 debug!("Creating a SSL Connection");
                 let connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
-                TCPStreamType::SSL(BufReader::new(connector.connect(&account.host[..], tcp_stream)?))
+                TCPStreamType::SSL(BufReader::new(
+                        connector.connect(&account.host[..], tcp_stream)?))
             }
             _ => return Err("Unknown auth type".into()),
         };
@@ -139,7 +140,7 @@ impl POP3Connection {
                 msgnumval = x.to_string();
                 Some(msgnumval.as_ref())
             }
-            None => None
+            None => None,
         };
         self.send_command("LIST", msgnum)
             .map(|msg| POP3List::parse(&msg))
@@ -199,7 +200,7 @@ impl POP3Connection {
                 msgnumval = x.to_string();
                 Some(msgnumval.as_ref())
             }
-            None => None
+            None => None,
         };
         self.send_command("UIDL", msgnum)
             .map(|msg| POP3Uidl::parse(&msg))
@@ -238,7 +239,8 @@ impl POP3Connection {
     fn read_response(&mut self, is_multiline: bool) -> Result<Vec<String>> {
 
         lazy_static!{
-            static ref RESPONSE: Regex = Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
+            static ref RESPONSE: Regex =
+                Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
         }
         const LF: u8 = 0x0a;
         let mut response_data: Vec<String> = Vec::new();

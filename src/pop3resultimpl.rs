@@ -5,7 +5,8 @@ use regex::Regex;
 
 lazy_static! {
     static ref STAT_REGEX: Regex = Regex::new(r"(?P<nmsg>\d+) (?P<size>\d+)").unwrap();
-    static ref UIDL_REGEX: Regex = Regex::new(r"(?P<msgid>\d+) (?P<uidl>[\x21-\x7E]{1,70})").unwrap();
+    static ref UIDL_REGEX: Regex =
+        Regex::new(r"(?P<msgid>\d+) (?P<uidl>[\x21-\x7E]{1,70})").unwrap();
 }
 
 impl POP3Stat {
@@ -21,7 +22,7 @@ impl POP3Stat {
 impl POP3List {
     pub fn parse(list_data: &[String]) -> POP3List {
         let mut mbox: Vec<EmailMetadata> = Vec::new();
-        let beginitr = if list_data.len() > 1 {1} else {0};
+        let beginitr = if list_data.len() > 1 { 1 } else { 0 };
 
         // Parse all the other lines that contain details
         for line in list_data[beginitr..].iter() {
@@ -31,9 +32,7 @@ impl POP3List {
                 msg_size: cap.name("size").unwrap().as_str().parse::<u32>().unwrap(),
             })
         }
-        POP3List {
-            mailbox: mbox,
-        }
+        POP3List { mailbox: mbox }
     }
 }
 
@@ -51,7 +50,7 @@ impl POP3Retr {
 impl POP3Uidl {
     pub fn parse(uidl_data: &[String]) -> POP3Uidl {
         let mut uidl_map = HashMap::new();
-        let beginitr = if uidl_data.len() > 1 {1} else {0};
+        let beginitr = if uidl_data.len() > 1 { 1 } else { 0 };
 
         for line in uidl_data[beginitr..].iter() {
             let cap = UIDL_REGEX.captures(line).unwrap();
