@@ -160,14 +160,24 @@ impl POP3Connection {
             .map(|msg| POP3Retr::parse(&msg))
     }
 
-    pub fn dele(&mut self, msgnum: u32) {
-
+    pub fn dele(&mut self, msgnum: u32) -> Result<()> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: DELE");
+        let _ = self.send_command("DELE", Some(&msgnum.to_string()))?;
+        Ok(())
     }
 
     pub fn noop(&mut self) -> Result<()> {
         assert!(self.state == POP3State::TRANSACTION);
         trace!("Cmd: NOOP");
-        let _ = self.send_command("NOOP", None);
+        let _ = self.send_command("NOOP", None)?;
+        Ok(())
+    }
+
+    pub fn rset(&mut self) -> Result<()> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: RSET");
+        let _ = self.send_command("RSET", None)?;
         Ok(())
     }
 
