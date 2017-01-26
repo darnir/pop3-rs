@@ -1,5 +1,5 @@
 [package]
-name = "pop3"
+name = "pop3-rs"
 version = "0.1.0"
 authors = ["Darshit Shah <darnir@gmail.com>"]
 build = "build.rs"
