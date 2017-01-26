@@ -2,6 +2,7 @@ use openssl::ssl::SslStream;
 use std::net::TcpStream;
 use std::io::{Write, Error};
 
+#[derive(Debug)]
 pub enum TCPStreamType {
     Plain(TcpStream),
     SSL(SslStream<TcpStream>),

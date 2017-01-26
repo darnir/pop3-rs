@@ -2,6 +2,7 @@ use openssl::ssl::SslStream;
 use std::net::TcpStream;
 use std::io::{Read, BufRead, BufReader, Error};
 
+#[derive(Debug)]
 pub enum TCPReader {
     Plain(BufReader<TcpStream>),
     SSL(BufReader<SslStream<TcpStream>>),

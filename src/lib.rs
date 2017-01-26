@@ -191,6 +191,14 @@ impl POP3Connection {
         Ok(())
     }
 
+    pub fn top(&mut self, msgnum: u32, lines: u32) -> Result<POP3Retr> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: TOP {} {}", msgnum, lines);
+        let args = &format!("{} {}", msgnum, lines);
+        self.send_command("TOP", Some(args))
+            .map(|msg| POP3Retr::parse(&msg))
+    }
+
     fn read_greeting(&mut self) -> Result<()> {
         trace!("Reading Greeting from Server");
         let greeting = &self.read_response(false)?[0];
