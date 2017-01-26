@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct EmailMetadata {
     pub msg_id: u32,
@@ -18,4 +20,9 @@ pub struct POP3List {
 #[derive(Debug)]
 pub struct POP3Retr {
     pub msg_data: String,
+}
+
+#[derive(Debug)]
+pub struct POP3Uidl {
+    pub mailbox: HashMap<u32, String>,
 }

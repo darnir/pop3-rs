@@ -1,9 +1,11 @@
-use pop3result::{POP3Stat, POP3List, EmailMetadata, POP3Retr};
+use pop3result::{POP3Stat, POP3List, EmailMetadata, POP3Retr, POP3Uidl};
+use std::collections::HashMap;
 use regex::Regex;
 
 
 lazy_static! {
     static ref STAT_REGEX: Regex = Regex::new(r"(?P<nmsg>\d+) (?P<size>\d+)").unwrap();
+    static ref UIDL_REGEX: Regex = Regex::new(r"(?P<msgid>\d+) (?P<uidl>[\x21-\x7E]{1,70})").unwrap();
 }
 
 impl POP3Stat {
@@ -43,5 +45,20 @@ impl POP3Retr {
             data.push_str(line);
         }
         POP3Retr { msg_data: data }
+    }
+}
+
+impl POP3Uidl {
+    pub fn parse(uidl_data: &[String]) -> POP3Uidl {
+        let mut uidl_map = HashMap::new();
+        let beginitr = if uidl_data.len() > 1 {1} else {0};
+
+        for line in uidl_data[beginitr..].iter() {
+            let cap = UIDL_REGEX.captures(line).unwrap();
+            let msgid = cap.name("msgid").unwrap().as_str().parse::<u32>().unwrap();
+            let uidl = cap.name("uidl").unwrap().as_str().to_owned();
+            uidl_map.insert(msgid, uidl);
+        }
+        POP3Uidl { mailbox: uidl_map }
     }
 }

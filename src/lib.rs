@@ -43,8 +43,7 @@ pub mod pop3result;
 mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
-use tcpreader::TCPReader;
-use pop3result::{POP3Stat, POP3List, POP3Retr};
+use pop3result::{POP3Stat, POP3List, POP3Retr, POP3Uidl};
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -193,6 +192,21 @@ impl POP3Connection {
             .map(|msg| POP3Retr::parse(&msg))
     }
 
+    pub fn uidl(&mut self, msgnum: Option<u32>) -> Result<POP3Uidl> {
+        assert!(self.state == POP3State::TRANSACTION);
+        trace!("Cmd: UIDL");
+        let msgnumval;
+        let msgnum = match msgnum {
+            Some(x) => {
+                msgnumval = x.to_string();
+                Some(msgnumval.as_ref())
+            }
+            None => None
+        };
+        self.send_command("UIDL", msgnum)
+            .map(|msg| POP3Uidl::parse(&msg))
+    }
+
     fn read_greeting(&mut self) -> Result<()> {
         trace!("Reading Greeting from Server");
         let greeting = &self.read_response(false)?[0];
@@ -207,6 +221,7 @@ impl POP3Connection {
         // Identify if the command is a multiline command
         let is_multiline = match command {
             "LIST" => param.is_none(),
+            "UIDL" => param.is_none(),
             "RETR" => true,
             _ => false,
         };
