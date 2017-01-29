@@ -15,7 +15,6 @@
 //!         username: String::from("username"),
 //!         password: String::from("password"),
 //!         auth: String::from("SSL"),
-//!         maildir: None
 //!     };
 //!
 //!     let mut connection = POP3Connection::new(config).unwrap();
@@ -53,7 +52,6 @@ extern crate regex;
 use std::io::BufReader;
 use openssl::ssl::{SslMethod, SslConnectorBuilder};
 use std::net::TcpStream;
-use std::path::PathBuf;
 use regex::Regex;
 
 pub mod errors {

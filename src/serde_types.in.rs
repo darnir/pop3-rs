@@ -5,5 +5,4 @@ pub struct AccountConfig {
     pub username: String,
     pub password: String,
     pub auth: String,
-    pub maildir: Option<PathBuf>,
 }
