@@ -294,7 +294,7 @@ impl POP3Connection {
         while !complete && is_multiline {
             buff.clear();
             self.stream.read_until(LF, &mut buff)?;
-            let line = String::from_utf8(buff.clone())?;
+            let line = unsafe {String::from_utf8_unchecked(buff.clone())};
             if line == ".\r\n" {
                 complete = true;
             } else {
