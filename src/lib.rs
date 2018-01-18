@@ -39,7 +39,7 @@ extern crate openssl;
 extern crate regex;
 
 use std::io::BufReader;
-use openssl::ssl::{SslMethod, SslConnectorBuilder};
+use openssl::ssl::{SslMethod, SslConnector};
 use std::net::TcpStream;
 use regex::Regex;
 
@@ -100,7 +100,7 @@ impl POP3Connection {
             }
             "SSL" => {
                 debug!("Creating a SSL Connection");
-                let connector = SslConnectorBuilder::new(SslMethod::tls())?.build();
+                let connector = SslConnector::builder(SslMethod::tls())?.build();
                 TCPStreamType::SSL(BufReader::new(
                         connector.connect(&account.host[..], tcp_stream)?))
             }
