@@ -30,16 +30,16 @@
 //! ```
 
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate openssl;
 extern crate regex;
 
 use std::io::BufReader;
-use openssl::ssl::{SslMethod, SslConnector};
+use openssl::ssl::{SslConnector, SslMethod};
 use std::net::TcpStream;
 use regex::Regex;
 
@@ -61,7 +61,7 @@ pub mod pop3result;
 mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
-use pop3result::{POP3Stat, POP3List, POP3Retr, POP3Uidl};
+use pop3result::{POP3List, POP3Retr, POP3Stat, POP3Uidl};
 
 #[derive(Debug)]
 pub struct AccountConfig {
@@ -72,8 +72,7 @@ pub struct AccountConfig {
     pub auth: String,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 enum POP3State {
     BEGIN,
     AUTHORIZATION,
@@ -101,8 +100,9 @@ impl POP3Connection {
             "SSL" => {
                 debug!("Creating a SSL Connection");
                 let connector = SslConnector::builder(SslMethod::tls())?.build();
-                TCPStreamType::SSL(BufReader::new(
-                        connector.connect(&account.host[..], tcp_stream)?))
+                TCPStreamType::SSL(
+                    BufReader::new(connector.connect(&account.host[..], tcp_stream)?),
+                )
             }
             _ => return Err("Unknown auth type".into()),
         };
@@ -265,7 +265,6 @@ impl POP3Connection {
     }
 
     fn read_response(&mut self, is_multiline: bool) -> Result<Vec<String>> {
-
         lazy_static!{
             static ref RESPONSE: Regex =
                 Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
@@ -283,7 +282,11 @@ impl POP3Connection {
         // Test if the response is positive. Else exit early.
         let status_line = response_data[0].clone();
         let response_groups = RESPONSE.captures(&status_line).unwrap();
-        match response_groups.name("status").ok_or("Regex match failed")?.as_str() {
+        match response_groups
+            .name("status")
+            .ok_or("Regex match failed")?
+            .as_str()
+        {
             "+OK" => complete = false,
             "-ERR" => return Err(response_groups["statustext"].to_string().into()),
             _ => return Err("Un-parseable Response".into()),
@@ -292,7 +295,7 @@ impl POP3Connection {
         while !complete && is_multiline {
             buff.clear();
             self.stream.read_until(LF, &mut buff)?;
-            let line = unsafe {String::from_utf8_unchecked(buff.clone())};
+            let line = unsafe { String::from_utf8_unchecked(buff.clone()) };
             if line == ".\r\n" {
                 complete = true;
             } else {

@@ -1,6 +1,6 @@
 use openssl::ssl::SslStream;
 use std::net::TcpStream;
-use std::io::{Read, BufRead, BufReader, Write, Error};
+use std::io::{BufRead, BufReader, Error, Read, Write};
 
 #[derive(Debug)]
 pub enum TCPStreamType {
@@ -48,8 +48,11 @@ impl TCPStreamType {
     pub fn shutdown(&mut self) {
         if let TCPStreamType::Plain(ref mut stream) = *self {
             trace!("Closing TCP Stream");
-            stream.get_mut().shutdown(::std::net::Shutdown::Both).unwrap();
-        } else if let TCPStreamType::SSL(ref mut stream ) = *self {
+            stream
+                .get_mut()
+                .shutdown(::std::net::Shutdown::Both)
+                .unwrap();
+        } else if let TCPStreamType::SSL(ref mut stream) = *self {
             trace!("Closing SSL Stream");
             stream.get_mut().shutdown().unwrap();
         }

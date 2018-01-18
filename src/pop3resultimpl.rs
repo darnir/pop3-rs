@@ -1,7 +1,6 @@
-use pop3result::{POP3Stat, POP3List, EmailMetadata, POP3Retr, POP3Uidl};
+use pop3result::{EmailMetadata, POP3List, POP3Retr, POP3Stat, POP3Uidl};
 use std::collections::HashMap;
 use regex::Regex;
-
 
 lazy_static! {
     static ref STAT_REGEX: Regex = Regex::new(r"(?P<nmsg>\d+) (?P<size>\d+)").unwrap();
@@ -13,8 +12,18 @@ impl POP3Stat {
     pub fn parse(stat_line: &str) -> POP3Stat {
         let stat_cap = STAT_REGEX.captures(stat_line).unwrap();
         POP3Stat {
-            num_mails: stat_cap.name("nmsg").unwrap().as_str().parse::<u32>().unwrap(),
-            mbox_size: stat_cap.name("size").unwrap().as_str().parse::<u32>().unwrap(),
+            num_mails: stat_cap
+                .name("nmsg")
+                .unwrap()
+                .as_str()
+                .parse::<u32>()
+                .unwrap(),
+            mbox_size: stat_cap
+                .name("size")
+                .unwrap()
+                .as_str()
+                .parse::<u32>()
+                .unwrap(),
         }
     }
 }
