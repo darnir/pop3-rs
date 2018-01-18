@@ -28,17 +28,6 @@
 //!     connection.quit().unwrap();
 //! }
 //! ```
-#[cfg(feature = "serde_derive")]
-#[macro_use]
-extern crate serde_derive;
-
-#[cfg(feature = "serde_derive")]
-include!("serde_types.in.rs");
-
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
-
-/******************************************************************/
 
 #[macro_use]
 extern crate log;
@@ -73,6 +62,15 @@ mod pop3resultimpl;
 mod utils;
 use tcpstream::TCPStreamType;
 use pop3result::{POP3Stat, POP3List, POP3Retr, POP3Uidl};
+
+#[derive(Debug)]
+pub struct AccountConfig {
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+    pub auth: String,
+}
 
 #[derive(PartialEq)]
 #[derive(Debug)]
