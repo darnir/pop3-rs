@@ -38,10 +38,10 @@ extern crate log;
 extern crate openssl;
 extern crate regex;
 
-use std::io::BufReader;
 use openssl::ssl::{SslConnector, SslMethod};
-use std::net::TcpStream;
 use regex::Regex;
+use std::io::BufReader;
+use std::net::TcpStream;
 
 pub mod errors {
     error_chain! {
@@ -56,12 +56,12 @@ pub mod errors {
 }
 use errors::*;
 
-mod tcpstream;
 pub mod pop3result;
 mod pop3resultimpl;
+mod tcpstream;
 mod utils;
-use tcpstream::TCPStreamType;
 use pop3result::{POP3List, POP3Retr, POP3Stat, POP3Uidl};
+use tcpstream::TCPStreamType;
 
 #[derive(Debug)]
 pub struct AccountConfig {
@@ -100,9 +100,9 @@ impl POP3Connection {
             "SSL" => {
                 debug!("Creating a SSL Connection");
                 let connector = SslConnector::builder(SslMethod::tls())?.build();
-                TCPStreamType::SSL(
-                    BufReader::new(connector.connect(&account.host[..], tcp_stream)?),
-                )
+                TCPStreamType::SSL(BufReader::new(
+                    connector.connect(&account.host[..], tcp_stream)?,
+                ))
             }
             _ => return Err("Unknown auth type".into()),
         };
@@ -265,7 +265,7 @@ impl POP3Connection {
     }
 
     fn read_response(&mut self, is_multiline: bool) -> Result<Vec<String>> {
-        lazy_static!{
+        lazy_static! {
             static ref RESPONSE: Regex =
                 Regex::new(r"^(?P<status>\+OK|-ERR) (?P<statustext>.*)").unwrap();
         }

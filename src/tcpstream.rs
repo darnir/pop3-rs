@@ -1,6 +1,6 @@
 use openssl::ssl::SslStream;
-use std::net::TcpStream;
 use std::io::{BufRead, BufReader, Error, Read, Write};
+use std::net::TcpStream;
 
 #[derive(Debug)]
 pub enum TCPStreamType {

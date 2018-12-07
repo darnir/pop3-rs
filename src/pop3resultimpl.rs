@@ -1,6 +1,6 @@
 use pop3result::{EmailMetadata, POP3List, POP3Retr, POP3Stat, POP3Uidl};
-use std::collections::HashMap;
 use regex::Regex;
+use std::collections::HashMap;
 
 lazy_static! {
     static ref STAT_REGEX: Regex = Regex::new(r"(?P<nmsg>\d+) (?P<size>\d+)").unwrap();
