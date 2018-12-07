@@ -18,6 +18,6 @@ travis-ci = { repository = "pop3-rs" }
 openssl = "0.10.15"
 log = "0.4"
 error-chain = "0.11"
-regex = "0.2"
+regex = "1.1"
 lazy_static = "1.0"
 rust-crypto = "0.2"
