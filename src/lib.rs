@@ -174,7 +174,7 @@ impl POP3Connection {
             .map(|msg| POP3List::parse(&msg))
     }
 
-    pub fn retr(&mut self, msgnum: &u32) -> Result<POP3Retr> {
+    pub fn retr(&mut self, msgnum: u32) -> Result<POP3Retr> {
         assert!(self.state == POP3State::TRANSACTION);
         trace!("Cmd: RETR");
         self.send_command("RETR", Some(&msgnum.to_string()))
