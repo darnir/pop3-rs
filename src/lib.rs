@@ -35,6 +35,7 @@ extern crate error_chain;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate md5;
 extern crate openssl;
 extern crate regex;
 
