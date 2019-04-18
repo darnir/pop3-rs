@@ -15,9 +15,9 @@ license = "MIT"
 travis-ci = { repository = "pop3-rs" }
 
 [dependencies]
-openssl = "0.10.15"
+openssl = "0.10"
 log = "0.4"
-error-chain = "0.11"
+error-chain = "0.12"
 regex = "1.1"
 lazy_static = "1.0"
 rust-crypto = "0.2"
