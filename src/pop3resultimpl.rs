@@ -59,14 +59,17 @@ impl POP3Retr {
 impl POP3Uidl {
     pub fn parse(uidl_data: &[String]) -> POP3Uidl {
         let mut uidl_map = HashMap::new();
+        let mut reverse_map = HashMap::new();
+
         let beginitr = if uidl_data.len() > 1 { 1 } else { 0 };
 
         for line in uidl_data[beginitr..].iter() {
             let cap = UIDL_REGEX.captures(line).unwrap();
             let msgid = cap.name("msgid").unwrap().as_str().parse::<u32>().unwrap();
             let uidl = cap.name("uidl").unwrap().as_str().to_owned();
-            uidl_map.insert(msgid, uidl);
+            uidl_map.insert(msgid, uidl.clone());
+            reverse_map.insert(uidl, msgid);
         }
-        POP3Uidl { mailbox: uidl_map }
+        POP3Uidl { mailbox: uidl_map, reverse_map }
     }
 }

@@ -25,4 +25,5 @@ pub struct POP3Retr {
 #[derive(Debug)]
 pub struct POP3Uidl {
     pub mailbox: HashMap<u32, String>,
+    pub reverse_map: HashMap<String, u32>,
 }
