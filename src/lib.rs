@@ -109,8 +109,8 @@ impl POP3Connection {
         };
 
         let mut ctx = POP3Connection {
-            account: account,
-            stream: stream,
+            account,
+            stream,
             state: POP3State::BEGIN,
             timestamp: String::new(),
         };
